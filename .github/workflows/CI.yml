@@ -1,0 +1,181 @@
+name: CI
+
+on: 
+  push:
+  pull_request:
+
+jobs:
+  format:
+    runs-on: ubuntu-18.04
+    
+    steps:
+      - uses: actions/checkout@v1
+      - uses: Geode-solutions/actions/clang-format@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+      
+  build-ubuntu:
+    runs-on: ubuntu-18.04
+    container: "geodesolutions/ubuntu"
+    needs: format
+    strategy:
+      matrix:
+        python: [3.6, 3.7, 3.8]
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python ${{ matrix.python }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python }}
+    - name: Cache node modules
+      uses: actions/cache@v1.2.0
+      with:
+        path: node_modules
+        key: node-ubuntu-${{ matrix.python }}-${{ hashFiles('package-lock.json') }}
+    - uses: Geode-solutions/actions/get-release@master
+      id: opengeode-io
+      with:
+        repository: OpenGeode-IO
+        file: '${{ matrix.python }}-ubuntu.tar.gz'
+        token: ${{ secrets.TOKEN }}
+    - name: Compile
+      run: |
+        npm config set cmake_PYTHON_VERSION ${{ matrix.python }}
+        npm config set cmake_CMAKE_PREFIX_PATH ${GITHUB_WORKSPACE}/${{ steps.opengeode-io.outputs.path }}
+        npm install
+        npm run package -- version ubuntu
+      env:
+        Python3_ROOT_DIR: ${{ env.pythonLocation }}
+    - name: Notify slack
+      if: failure() && github.ref == 'refs/heads/master'
+      uses: 8398a7/action-slack@v2
+      with:
+        status: failure
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}    
+
+  build-rhel:
+    runs-on: ubuntu-18.04
+    container: "geodesolutions/centos"
+    needs: format
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Cache node modules
+      uses: actions/cache@v1.2.0
+      with:
+        path: node_modules
+        key: node-rhel-${{ hashFiles('package-lock.json') }}
+    - uses: Geode-solutions/actions/get-release@master
+      id: opengeode-io
+      with:
+        repository: OpenGeode-IO
+        file: '-rhel.tar.gz'
+        token: ${{ secrets.TOKEN }}
+    - name: Compile
+      run: |
+        npm config set cmake_PYTHON_VERSION 2.7
+        npm config set cmake_CMAKE_PREFIX_PATH ${GITHUB_WORKSPACE}/${{ steps.opengeode-io.outputs.path }}
+        npm install
+        npm run package -- version rhel
+    - name: Notify slack
+      if: failure() && github.ref == 'refs/heads/master'
+      uses: 8398a7/action-slack@v2
+      with:
+        status: failure
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}    
+
+  build-mac:
+    runs-on: macos-latest
+    needs: format
+    strategy:
+      matrix:
+        python: [3.6, 3.7, 3.8]
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python ${{ matrix.python }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python }}
+    - name: Cache node modules
+      uses: actions/cache@v1.2.0
+      with:
+        path: node_modules
+        key: node-darwin-${{ matrix.python }}-${{ hashFiles('package-lock.json') }}
+    - uses: Geode-solutions/actions/get-release@master
+      id: opengeode-io
+      with:
+        repository: OpenGeode-IO
+        file: '${{ matrix.python }}-darwin.tar.gz'
+        token: ${{ secrets.TOKEN }}
+    - name: Compile
+      run: |
+        npm config set cmake_PYTHON_VERSION ${{ matrix.python }}
+        npm config set cmake_CMAKE_PREFIX_PATH ${GITHUB_WORKSPACE}/${{ steps.opengeode-io.outputs.path }}
+        npm install
+        npm run package -- version darwin
+      env:
+        Python3_ROOT_DIR: ${{ env.pythonLocation }}
+    - name: Notify slack
+      if: failure() && github.ref == 'refs/heads/master'
+      uses: 8398a7/action-slack@v2
+      with:
+        status: failure
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+  
+  build-windows:
+    runs-on: windows-2016
+    needs: format
+    strategy:
+      matrix:
+        python: [3.6, 3.7]
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python ${{ matrix.python }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python }}
+    - name: Cache node modules
+      uses: actions/cache@v1.2.0
+      with:
+        path: node_modules
+        key: node-win64-${{ matrix.python }}-${{ hashFiles('package-lock.json') }}
+    - uses: Geode-solutions/actions/get-release@master
+      id: opengeode-io
+      with:
+        repository: OpenGeode-IO
+        file: '${{ matrix.python }}-win64.zip'
+        token: ${{ secrets.TOKEN }}
+    - name: Compile
+      run: |
+        npm config set cmake_PYTHON_VERSION ${{ matrix.python }}
+        npm config set cmake_CMAKE_PREFIX_PATH $env:GITHUB_WORKSPACE/${{ steps.opengeode-io.outputs.path }}
+        npm install
+        npm run package -- version win64
+      env:
+        Python3_ROOT_DIR: ${{ env.pythonLocation }}
+    - name: Notify slack
+      if: failure() && github.ref == 'refs/heads/master'
+      uses: 8398a7/action-slack@v2
+      with:
+        status: failure
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        
+  semantic-release:
+    runs-on: ubuntu-18.04
+    needs: [build-ubuntu, build-rhel, build-mac, build-windows]
+    steps:
+    - uses: actions/checkout@v1
+    - run: npx semantic-release
+      env:
+        GITHUB_TOKEN: ${{ secrets.TOKEN }}
