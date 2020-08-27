@@ -21,5 +21,5 @@
  *
  */
 
-export default function(store, platform) {
+export default function(store) {
 }
