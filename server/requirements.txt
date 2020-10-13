@@ -1,0 +1,2 @@
+OpenGeode-Core >= 6.0.3, == 6.*
+OpenGeode-IO >= 5.0.1, == 5.*

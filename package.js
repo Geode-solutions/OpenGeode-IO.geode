@@ -78,7 +78,9 @@ const configFile = process.platform === "win32" ? "config.win.json" : "config.un
 archive.append(fs.createReadStream(configFile), {name: path.join(dir,"config.json")});
 
 archive.directory("server", path.join(dir, "server"));
-
+archive.append(fs.createReadStream("server/requirements.txt"), {
+  name: path.join(dir, "server", "requirements.txt")
+});
 for( let i = 4; i < process.argv.length; i++) {
     archive.directory(process.argv[i], path.join(dir, "server"));
 }
