@@ -5,19 +5,9 @@ on:
   pull_request:
 
 jobs:
-  format:
-    runs-on: ubuntu-18.04
-    
-    steps:
-      - uses: actions/checkout@v1
-      - uses: Geode-solutions/actions/clang-format@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
-      
   build-ubuntu:
     runs-on: ubuntu-18.04
     container: "geodesolutions/ubuntu"
-    needs: format
     strategy:
       matrix:
         python: [3.6, 3.7, 3.8]
@@ -33,16 +23,9 @@ jobs:
       with:
         path: node_modules
         key: node-ubuntu-${{ matrix.python }}-${{ hashFiles('package-lock.json') }}
-    - uses: Geode-solutions/actions/get-release@master
-      id: opengeode-io
-      with:
-        repository: OpenGeode-IO
-        file: '-ubuntu.tar.gz'
-        token: ${{ secrets.TOKEN }}
     - name: Compile
       run: |
         npm config set cmake_PYTHON_VERSION ${{ matrix.python }}
-        npm config set cmake_CMAKE_PREFIX_PATH ${GITHUB_WORKSPACE}/${{ steps.opengeode-io.outputs.path }}
         npm install
         npm run package -- version ubuntu
       env:
@@ -91,7 +74,6 @@ jobs:
 
   build-mac:
     runs-on: macos-latest
-    needs: format
     strategy:
       matrix:
         python: [3.6, 3.7, 3.8]
@@ -107,16 +89,9 @@ jobs:
       with:
         path: node_modules
         key: node-darwin-${{ matrix.python }}-${{ hashFiles('package-lock.json') }}
-    - uses: Geode-solutions/actions/get-release@master
-      id: opengeode-io
-      with:
-        repository: OpenGeode-IO
-        file: '-darwin.tar.gz'
-        token: ${{ secrets.TOKEN }}
     - name: Compile
       run: |
         npm config set cmake_PYTHON_VERSION ${{ matrix.python }}
-        npm config set cmake_CMAKE_PREFIX_PATH ${GITHUB_WORKSPACE}/${{ steps.opengeode-io.outputs.path }}
         npm install
         npm run package -- version darwin
       env:
@@ -132,7 +107,6 @@ jobs:
   
   build-windows:
     runs-on: windows-2016
-    needs: format
     strategy:
       matrix:
         python: [3.6, 3.7]
@@ -148,16 +122,9 @@ jobs:
       with:
         path: node_modules
         key: node-win64-${{ matrix.python }}-${{ hashFiles('package-lock.json') }}
-    - uses: Geode-solutions/actions/get-release@master
-      id: opengeode-io
-      with:
-        repository: OpenGeode-IO
-        file: '-win64.zip'
-        token: ${{ secrets.TOKEN }}
     - name: Compile
       run: |
         npm config set cmake_PYTHON_VERSION ${{ matrix.python }}
-        npm config set cmake_CMAKE_PREFIX_PATH $env:GITHUB_WORKSPACE/${{ steps.opengeode-io.outputs.path }}
         npm install
         npm run package -- version win64
       env:
