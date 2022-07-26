@@ -5,38 +5,37 @@ on:
     tags: 'v*'
 
 jobs:
-  build-ubuntu:
-    runs-on: ubuntu-18.04
-    container: "geodesolutions/ubuntu"
+  build-linux:
+    runs-on: ubuntu-latest
+    container: "ghcr.io/geode-solutions/centos:master"
     strategy:
       matrix:
-        python: [3.7, 3.8]
+        config:
+        - {python: "3.7", tag: "cp37-cp37m"}
+        - {python: "3.8", tag: "cp38-cp38"}
+        - {python: "3.9", tag: "cp39-cp39"}
+        - {python: "3.10", tag: "cp310-cp310"}
 
     steps:
     - uses: actions/checkout@v1
-    - name: Set up Python ${{ matrix.python }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python }}
     - name: Cache node modules
       uses: actions/cache@v1.2.0
       with:
         path: node_modules
-        key: node-ubuntu-${{ matrix.python }}-${{ hashFiles('package-lock.json') }}
+        key: node-linux-${{ matrix.config.python }}-${{ hashFiles('package-lock.json') }}
     - name: Generate package
       id: package
       run: |
-        npm config set cmake_PYTHON_VERSION ${{ matrix.python }}
+        export PATH=/opt/python/${{ matrix.config.tag }}/bin:$PATH
+        npm config set cmake_PYTHON_VERSION ${{ matrix.config.python }}
         version="${GITHUB_REF##*/*/v}"
-        echo ::set-output name=version::$version-python${{ matrix.python }}
+        echo ::set-output name=version::$version-python${{ matrix.config.python }}
         npm install
-        npm run package -- $version-python${{ matrix.python }} ubuntu 
-      env:
-        Python3_ROOT_DIR: ${{ env.pythonLocation }}
+        npm run package -- $version-python${{ matrix.config.python }} linux 
     - name: Upload
       uses: softprops/action-gh-release@v1
       with:
-        files: "opengeode-io-${{ steps.package.outputs.version }}-ubuntu.zip"
+        files: "opengeode-io-${{ steps.package.outputs.version }}-linux.zip"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Notify slack
@@ -53,29 +52,31 @@ jobs:
     runs-on: windows-2019
     strategy:
       matrix:
-        python: [3.7]
+        config:
+        - {python: "3.7", tag: "cp37-cp37m"}
+        - {python: "3.8", tag: "cp38-cp38"}
+        - {python: "3.9", tag: "cp39-cp39"}
+        - {python: "3.10", tag: "cp310-cp310"}
 
     steps:
     - uses: actions/checkout@v1
-    - name: Set up Python ${{ matrix.python }}
+    - name: Set up Python ${{ matrix.config.python }}
       uses: actions/setup-python@v2
       with:
-        python-version: ${{ matrix.python }}
+        python-version: ${{ matrix.config.python }}
     - name: Cache node modules
       uses: actions/cache@v1.2.0
       with:
         path: node_modules
-        key: node-win64-${{ matrix.python }}-${{ hashFiles('package-lock.json') }}
+        key: node-win64-${{ matrix.config.python }}-${{ hashFiles('package-lock.json') }}
     - name: Generate package
       id: package
       run: |
-        npm config set cmake_PYTHON_VERSION ${{ matrix.python }}
+        npm config set cmake_PYTHON_VERSION ${{ matrix.config.python }}
         $version = ${env:GITHUB_REF} -replace 'refs\/tags\/v', ''
-        echo "::set-output name=version::$version-python${{ matrix.python }}"
+        echo "::set-output name=version::$version-python${{ matrix.config.python }}"
         npm install
-        npm run package -- $version-python${{ matrix.python }} win64 
-      env:
-        Python3_ROOT_DIR: ${{ env.pythonLocation }}
+        npm run package -- $version-python${{ matrix.config.python }} win64 
     - name: Upload
       uses: softprops/action-gh-release@v1
       with:
