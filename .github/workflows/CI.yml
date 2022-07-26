@@ -2,7 +2,6 @@ name: CI
 
 on: 
   push:
-  pull_request:
 
 jobs:
   build-linux:
@@ -18,10 +17,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    - name: Set up Python ${{ matrix.confi.python }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.confi.python }}
     - name: Cache node modules
       uses: actions/cache@v1.2.0
       with:
@@ -32,8 +27,6 @@ jobs:
         export PATH=/opt/python/${{ matrix.config.tag }}/bin:$PATH
         npm install
         npm run package -- version linux
-      env:
-        Python3_ROOT_DIR: ${{ env.pythonLocation }}
     - name: Notify slack
       if: failure() && github.ref == 'refs/heads/master'
       uses: 8398a7/action-slack@v2
