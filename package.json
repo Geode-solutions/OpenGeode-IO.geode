@@ -45,7 +45,6 @@
     "vtk.js": "^14.19.0",
     "vue": "^2.6.12",
     "vue-cli-plugin-vuetify": "^2.0.8",
-    "vue-svg-loader": "^0.16.0",
     "vue-template-compiler": "^2.6.12",
     "vuetify": "^2.3.21",
     "vuex": "^3.6.0"
