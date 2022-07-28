@@ -30,23 +30,21 @@
     "lint": "vue-cli-service lint"
   },
   "devDependencies": {
-    "@geode/geode-tools": "^1.1.8",
-    "@vue/cli-plugin-babel": "^4.5.9",
-    "@vue/cli-plugin-eslint": "^4.5.9",
-    "@vue/cli-service": "^4.5.9",
-    "@vue/eslint-config-prettier": "^6.0.0",
-    "archiver": "^4.0.2",
-    "babel-eslint": "^10.1.0",
-    "eslint": "^6.8.0",
-    "eslint-plugin-prettier": "^3.3.0",
-    "eslint-plugin-vue": "^6.2.2",
-    "sass": "^1.30.0",
+    "@geode/geode-tools": "^1.1.32",
+    "@vue/cli-plugin-babel": "^5.0.8",
+    "@vue/cli-plugin-eslint": "^5.0.8",
+    "@vue/cli-service": "^5.0.8",
+    "@vue/eslint-config-prettier": "^7.0.0",
+    "archiver": "^5.3.1",
+    "eslint": "^8.20.0",
+    "eslint-plugin-vue": "^9.3.0",
+    "sass": "^1.54.0",
     "sass-loader": "^8.0.2",
-    "vtk.js": "^14.19.0",
-    "vue": "^2.6.12",
-    "vue-cli-plugin-vuetify": "^2.0.8",
-    "vue-template-compiler": "^2.6.12",
-    "vuetify": "^2.3.21",
-    "vuex": "^3.6.0"
+    "vtk.js": "^25.5.0",
+    "vue": "^2.7.8",
+    "vue-cli-plugin-vuetify": "^2.5.1",
+    "vue-template-compiler": "^2.7.8",
+    "vuetify": "^2.6.7",
+    "vuex": "^3.6.2"
   }
 }
