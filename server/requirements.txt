@@ -1,1 +1,1 @@
-OpenGeode-IO >= 5.23.4, == 5.*
+OpenGeode-IO >= 6.0.0, == 6.*
